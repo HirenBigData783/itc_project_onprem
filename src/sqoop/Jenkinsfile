@@ -4,7 +4,7 @@ pipeline {
     environment {
         REMOTE_HOST     = '13.41.167.97'
         REMOTE_USER     = 'consultant'
-        REMOTE_PASSWORD = 'WelcomeItc@2026'
+        REMOTE_PASSWORD = credentials('remote-password')
         PROJECT_DIR     = '/home/consultant/hiren/TFL_Project'
         HDFS_DIR        = '/tmp/hiren/TFL_project'
     }
