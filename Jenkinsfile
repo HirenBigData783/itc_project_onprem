@@ -1,12 +1,17 @@
 pipeline {
     agent any
 
+    parameters {
+        password(name: 'REMOTE_PASSWORD', defaultValue: '', description: 'Remote SSH password for Cloudera')
+        string(name: 'SQOOP_USER', defaultValue: 'admin', description: 'PostgreSQL username for Sqoop')
+        password(name: 'SQOOP_PASS', defaultValue: '', description: 'PostgreSQL password for Sqoop')
+    }
+
     environment {
         REMOTE_HOST     = '13.41.167.97'
         REMOTE_USER     = 'consultant'
-        REMOTE_PASSWORD = credentials('remote-password')
         PROJECT_DIR     = '/home/consultant/hiren/TFL_Project'
-        HDFS_DIR        = '/tmp/hiren/TFL_project'
+        HDFS_DIR        = '/tmp/hiren/tfl_proj/tfl_data'
     }
 
     stages {
@@ -43,11 +48,11 @@ pipeline {
                 echo '========================================='
                 sh '''
                     sshpass -p "${REMOTE_PASSWORD}" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-                        src/sqoop_import.sh ${REMOTE_USER}@${REMOTE_HOST}:${PROJECT_DIR}/sqoop/ 2>&1 | \
+                        src/sqoop/pgs_to_hadoop.sh ${REMOTE_USER}@${REMOTE_HOST}:${PROJECT_DIR}/sqoop/ 2>&1 | \
                         grep -v "ITC Big Data Lab" | grep -v "Commands:" | grep -v "HDFS home:" | grep -v "━" || true
 
                     sshpass -p "${REMOTE_PASSWORD}" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-                        src/hive_ddl.hql ${REMOTE_USER}@${REMOTE_HOST}:${PROJECT_DIR}/hive/ 2>&1 | \
+                        src/sqoop/create_hive_tables.hql ${REMOTE_USER}@${REMOTE_HOST}:${PROJECT_DIR}/sqoop/ 2>&1 | \
                         grep -v "ITC Big Data Lab" | grep -v "Commands:" | grep -v "HDFS home:" | grep -v "━" || true
 
                     echo "Scripts copied successfully"
@@ -63,7 +68,7 @@ pipeline {
                 sh '''
                     sshpass -p "${REMOTE_PASSWORD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
                         ${REMOTE_USER}@${REMOTE_HOST} \
-                        "chmod +x ${PROJECT_DIR}/sqoop/sqoop_import.sh" 2>&1 | \
+                        "chmod +x ${PROJECT_DIR}/sqoop/pgs_to_hadoop.sh" 2>&1 | \
                         grep -v "ITC Big Data Lab" | grep -v "Commands:" | grep -v "HDFS home:" | grep -v "━" || true
 
                     echo "Permissions set"
@@ -109,7 +114,7 @@ pipeline {
                 sh '''
                     sshpass -p "${REMOTE_PASSWORD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
                         ${REMOTE_USER}@${REMOTE_HOST} \
-                        "bash ${PROJECT_DIR}/sqoop/pgs_to_hadoop.sh" 2>&1 | \
+                        "SQOOP_USER='${SQOOP_USER}' SQOOP_PASS='${SQOOP_PASS}' bash ${PROJECT_DIR}/sqoop/pgs_to_hadoop.sh" 2>&1 | \
                         grep -v "ITC Big Data Lab" | grep -v "Commands:" | grep -v "HDFS home:" | grep -v "━" || true
 
                     echo "Sqoop import completed"
