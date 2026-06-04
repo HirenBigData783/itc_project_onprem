@@ -25,17 +25,22 @@ pipeline {
 
         stage('Validate Parameters') {
             steps {
-                script {
-                    if (!params.REMOTE_PASSWORD?.trim()) {
-                        error('REMOTE_PASSWORD is required. Run the job with Build with Parameters and enter the Cloudera SSH password.')
-                    }
-                    if (!params.SQOOP_USER?.trim()) {
-                        error('SQOOP_USER is required.')
-                    }
-                    if (!params.SQOOP_PASS?.trim()) {
-                        error('SQOOP_PASS is required. Run the job with Build with Parameters and enter the PostgreSQL password.')
-                    }
-                }
+                sh '''
+                    if [ -z "$REMOTE_PASSWORD" ]; then
+                        echo "REMOTE_PASSWORD is required. Run the job with Build with Parameters and enter the Cloudera SSH password."
+                        exit 1
+                    fi
+
+                    if [ -z "$SQOOP_USER" ]; then
+                        echo "SQOOP_USER is required."
+                        exit 1
+                    fi
+
+                    if [ -z "$SQOOP_PASS" ]; then
+                        echo "SQOOP_PASS is required. Run the job with Build with Parameters and enter the PostgreSQL password."
+                        exit 1
+                    fi
+                '''
             }
         }
 
