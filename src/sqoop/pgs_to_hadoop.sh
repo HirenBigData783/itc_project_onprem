@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash 
 sqoop import \
   -D mapreduce.framework.name=local \
   -D mapreduce.jobtracker.staging.root.dir=/tmp/consultant/staging \
