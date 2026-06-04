@@ -1,49 +1,63 @@
 #!/bin/bash
-set -e
+sqoop import \
+  -D mapreduce.framework.name=local \
+  -D mapreduce.jobtracker.staging.root.dir=/tmp/consultant/staging \
+  --connect 'jdbc:postgresql://13.42.152.118:5432/testdb' \
+  --username admin --password admin123 \
+  --table dim_date \
+  --target-dir /tmp/hiren/TFL_project/dim_date \
+  --num-mappers 1 \
+  --fields-terminated-by ','
 
-export SQOOP_CONNECT="jdbc:postgresql://13.42.152.118:5432/testdb"
-export SQOOP_USER="${SQOOP_USER:?Set SQOOP_USER before running this script}"
-export SQOOP_PASS="${SQOOP_PASS:?Set SQOOP_PASS before running this script}"
-export TARGET_BASE_DIR=/tmp/hiren/tfl_proj/tfl_data
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-HIVE_DDL_FILE="$SCRIPT_DIR/create_hive_tables.hql"
+sqoop import \
+  -D mapreduce.framework.name=local \
+  -D mapreduce.jobtracker.staging.root.dir=/tmp/consultant/staging \
+  --connect 'jdbc:postgresql://13.42.152.118:5432/testdb' \
+  --username admin --password admin123 \
+  --table dim_lines \
+  --target-dir /tmp/hiren/TFL_project/dim_lines \
+  --num-mappers 1 \
+  --fields-terminated-by ','
 
-TABLES=(
-  "dim_stations"
-  "fact_station_lines"
-  "fact_passenger_entry_exit"
-  "dim_networks"
-  "dim_lines"
-  "dim_date"
-)
+sqoop import \
+  -D mapreduce.framework.name=local \
+  -D mapreduce.jobtracker.staging.root.dir=/tmp/consultant/staging \
+  --connect 'jdbc:postgresql://13.42.152.118:5432/testdb' \
+  --username admin --password admin123 \
+  --table dim_networks \
+  --target-dir /tmp/hiren/TFL_project/dim_networks \
+  --num-mappers 1 \
+  --fields-terminated-by ','
 
-for TABLE_NAME in "${TABLES[@]}"
-do
-  TARGET_DIR="$TARGET_BASE_DIR/$TABLE_NAME"
+sqoop import \
+  -D mapreduce.framework.name=local \
+  -D mapreduce.jobtracker.staging.root.dir=/tmp/consultant/staging \
+  --connect 'jdbc:postgresql://13.42.152.118:5432/testdb' \
+  --username admin --password admin123 \
+  --table dim_stations \
+  --target-dir /tmp/hiren/TFL_project/dim_stations \
+  --num-mappers 1 \
+  --fields-terminated-by ','
 
-  echo "Starting $TABLE_NAME import..."
+sqoop import \
+  -D mapreduce.framework.name=local \
+  -D mapreduce.jobtracker.staging.root.dir=/tmp/consultant/staging \
+  --connect 'jdbc:postgresql://13.42.152.118:5432/testdb' \
+  --username admin --password admin123 \
+  --table fact_passenger_entry_exit \
+  --target-dir /tmp/hiren/TFL_project/fact_passenger_entry_exit \
+  --num-mappers 1 \
+  --fields-terminated-by ','
 
-  sqoop import \
-    -D mapreduce.framework.name=local \
-    --connect "$SQOOP_CONNECT" \
-    --username "$SQOOP_USER" \
-    --password "$SQOOP_PASS" \
-    --table "$TABLE_NAME" \
-    --target-dir "$TARGET_DIR" \
-    --delete-target-dir \
-    --fields-terminated-by '\001' \
-    --lines-terminated-by '\n' \
-    --null-string '\\N' \
-    --null-non-string '\\N' \
-    -m 1
+sqoop import \
+  -D mapreduce.framework.name=local \
+  -D mapreduce.jobtracker.staging.root.dir=/tmp/consultant/staging \
+  --connect 'jdbc:postgresql://13.42.152.118:5432/testdb' \
+  --username admin --password admin123 \
+  --table fact_station_lines \
+  --target-dir /tmp/hiren/TFL_project/fact_station_lines \
+  --num-mappers 1 \
+  --fields-terminated-by ','
 
-  echo "$TABLE_NAME import completed"
-done
-
-echo "All Sqoop jobs completed successfully"
-
-echo "Creating Hive external tables..."
-
-hive -f "$HIVE_DDL_FILE"
-
-echo "Hive external tables created successfully"
+echo "Verifying import..."
+hdfs dfs -ls /tmp/hiren/TFL_project/
