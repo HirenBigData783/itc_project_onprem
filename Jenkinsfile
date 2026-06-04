@@ -8,134 +8,115 @@ pipeline {
     }
 
     environment {
-        REMOTE_HOST     = '13.41.167.97'
-        REMOTE_USER     = 'consultant'
-        PROJECT_DIR     = '/home/consultant/hiren/TFL_Project'
-        HDFS_DIR        = '/tmp/hiren/tfl_proj/tfl_data'
+        REMOTE_HOST = '13.41.167.97'
+        REMOTE_USER = 'consultant'
+        PROJECT_DIR = '/home/consultant/hiren/TFL_Project'
+        HDFS_DIR = '/tmp/hiren/tfl_proj/tfl_data'
+        SSH_OPTS = '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                echo '========================================='
-                echo 'Stage 1: Git Checkout'
-                echo '========================================='
                 checkout scm
                 sh 'git log -1 --oneline'
             }
         }
 
+        stage('Validate Parameters') {
+            steps {
+                script {
+                    if (!params.REMOTE_PASSWORD?.trim()) {
+                        error('REMOTE_PASSWORD is required. Run the job with Build with Parameters and enter the Cloudera SSH password.')
+                    }
+                    if (!params.SQOOP_USER?.trim()) {
+                        error('SQOOP_USER is required.')
+                    }
+                    if (!params.SQOOP_PASS?.trim()) {
+                        error('SQOOP_PASS is required. Run the job with Build with Parameters and enter the PostgreSQL password.')
+                    }
+                }
+            }
+        }
+
+        stage('Check Jenkins Agent Tools') {
+            steps {
+                sh '''
+                    command -v sshpass
+                    command -v ssh
+                    command -v scp
+                '''
+            }
+        }
+
         stage('Prepare Remote Directory') {
             steps {
-                echo '========================================='
-                echo 'Stage 2: Create Directories on Cloudera'
-                echo '========================================='
                 sh '''
-                    sshpass -p "${REMOTE_PASSWORD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-                        ${REMOTE_USER}@${REMOTE_HOST} \
-                        "mkdir -p ${PROJECT_DIR}/sqoop ${PROJECT_DIR}/hive" 2>&1 | \
-                        grep -v "ITC Big Data Lab" | grep -v "Commands:" | grep -v "HDFS home:" | grep -v "━" || true
-
-                    echo "Directories created"
+                    export SSHPASS="$REMOTE_PASSWORD"
+                    sshpass -e ssh $SSH_OPTS "$REMOTE_USER@$REMOTE_HOST" \
+                        "mkdir -p '$PROJECT_DIR/sqoop'"
                 '''
             }
         }
 
         stage('Copy Scripts to Cloudera') {
             steps {
-                echo '========================================='
-                echo 'Stage 3: Copy Sqoop and Hive Scripts'
-                echo '========================================='
                 sh '''
-                    sshpass -p "${REMOTE_PASSWORD}" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-                        src/sqoop/pgs_to_hadoop.sh ${REMOTE_USER}@${REMOTE_HOST}:${PROJECT_DIR}/sqoop/ 2>&1 | \
-                        grep -v "ITC Big Data Lab" | grep -v "Commands:" | grep -v "HDFS home:" | grep -v "━" || true
-
-                    sshpass -p "${REMOTE_PASSWORD}" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-                        src/sqoop/create_hive_tables.hql ${REMOTE_USER}@${REMOTE_HOST}:${PROJECT_DIR}/sqoop/ 2>&1 | \
-                        grep -v "ITC Big Data Lab" | grep -v "Commands:" | grep -v "HDFS home:" | grep -v "━" || true
-
-                    echo "Scripts copied successfully"
+                    export SSHPASS="$REMOTE_PASSWORD"
+                    sshpass -e scp $SSH_OPTS \
+                        src/sqoop/pgs_to_hadoop.sh \
+                        src/sqoop/create_hive_tables.hql \
+                        "$REMOTE_USER@$REMOTE_HOST:$PROJECT_DIR/sqoop/"
                 '''
             }
         }
 
         stage('Set Permissions') {
             steps {
-                echo '========================================='
-                echo 'Stage 4: Set Execute Permissions'
-                echo '========================================='
                 sh '''
-                    sshpass -p "${REMOTE_PASSWORD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-                        ${REMOTE_USER}@${REMOTE_HOST} \
-                        "chmod +x ${PROJECT_DIR}/sqoop/pgs_to_hadoop.sh" 2>&1 | \
-                        grep -v "ITC Big Data Lab" | grep -v "Commands:" | grep -v "HDFS home:" | grep -v "━" || true
-
-                    echo "Permissions set"
+                    export SSHPASS="$REMOTE_PASSWORD"
+                    sshpass -e ssh $SSH_OPTS "$REMOTE_USER@$REMOTE_HOST" \
+                        "chmod +x '$PROJECT_DIR/sqoop/pgs_to_hadoop.sh'"
                 '''
             }
         }
 
-        stage('Prepare Staging Directory') {
+        stage('Prepare Remote Staging') {
             steps {
-                echo '========================================='
-                echo 'Stage 5: Create local staging directory'
-                echo '========================================='
                 sh '''
-                    sshpass -p "${REMOTE_PASSWORD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-                        ${REMOTE_USER}@${REMOTE_HOST} \
-                        "mkdir -p /tmp/hadoop/mapred/staging" 2>&1 | \
-                        grep -v "ITC Big Data Lab" | grep -v "Commands:" | grep -v "HDFS home:" | grep -v "━" || true
-                    echo "Staging directory ready"
+                    export SSHPASS="$REMOTE_PASSWORD"
+                    sshpass -e ssh $SSH_OPTS "$REMOTE_USER@$REMOTE_HOST" \
+                        "mkdir -p /tmp/hadoop/mapred/staging"
                 '''
             }
         }
 
-        stage('Clean HDFS') {
+        stage('Clean HDFS Target') {
             steps {
-                echo '========================================='
-                echo 'Stage 5: Clean HDFS directories'
-                echo '========================================='
                 sh '''
-                    sshpass -p "${REMOTE_PASSWORD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-                        ${REMOTE_USER}@${REMOTE_HOST} \
-                        "hdfs dfs -rm -r -f -skipTrash ${HDFS_DIR} 2>/dev/null || true" 2>&1 | \
-                        grep -v "ITC Big Data Lab" | grep -v "Commands:" | grep -v "HDFS home:" | grep -v "━" || true
-                    echo "HDFS cleaned"
+                    export SSHPASS="$REMOTE_PASSWORD"
+                    sshpass -e ssh $SSH_OPTS "$REMOTE_USER@$REMOTE_HOST" \
+                        "hdfs dfs -rm -r -f -skipTrash '$HDFS_DIR' || true"
                 '''
             }
         }
 
-        stage('Sqoop Import from PostgreSQL to HDFS') {
+        stage('Sqoop Import and Hive Tables') {
             steps {
-                echo '========================================='
-                echo 'Stage 5: Run Sqoop Import (6 tables)'
-                echo '========================================='
                 sh '''
-                    sshpass -p "${REMOTE_PASSWORD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-                        ${REMOTE_USER}@${REMOTE_HOST} \
-                        "SQOOP_USER='${SQOOP_USER}' SQOOP_PASS='${SQOOP_PASS}' bash ${PROJECT_DIR}/sqoop/pgs_to_hadoop.sh" 2>&1 | \
-                        grep -v "ITC Big Data Lab" | grep -v "Commands:" | grep -v "HDFS home:" | grep -v "━" || true
-
-                    echo "Sqoop import completed"
+                    export SSHPASS="$REMOTE_PASSWORD"
+                    sshpass -e ssh $SSH_OPTS "$REMOTE_USER@$REMOTE_HOST" \
+                        "SQOOP_USER='$SQOOP_USER' SQOOP_PASS='$SQOOP_PASS' bash '$PROJECT_DIR/sqoop/pgs_to_hadoop.sh'"
                 '''
             }
         }
 
-        
-
-        
-
-        stage('Verify Results') {
+        stage('Verify HDFS Data') {
             steps {
-                echo '========================================='
-                echo 'Stage 7: Verify HDFS Data'
-                echo '========================================='
                 sh '''
-                    sshpass -p "${REMOTE_PASSWORD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-                        ${REMOTE_USER}@${REMOTE_HOST} \
-                        "hdfs dfs -ls ${HDFS_DIR} 2>/dev/null || echo 'HDFS directory not found'" 2>&1 | \
-                        grep -v "ITC Big Data Lab" | grep -v "Commands:" | grep -v "HDFS home:" | grep -v "━" || true
+                    export SSHPASS="$REMOTE_PASSWORD"
+                    sshpass -e ssh $SSH_OPTS "$REMOTE_USER@$REMOTE_HOST" \
+                        "hdfs dfs -ls '$HDFS_DIR'"
                 '''
             }
         }
@@ -143,17 +124,12 @@ pipeline {
 
     post {
         success {
-            echo '========================================='
             echo 'TFL PIPELINE COMPLETED SUCCESSFULLY'
-            echo '========================================='
             echo "Cloudera: ${REMOTE_HOST}:${PROJECT_DIR}"
             echo "HDFS: ${HDFS_DIR}"
-            echo '========================================='
         }
         failure {
-            echo '========================================='
             echo 'TFL PIPELINE FAILED - check logs above'
-            echo '========================================='
         }
         always {
             echo 'Pipeline execution completed'
