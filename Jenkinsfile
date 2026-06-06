@@ -71,7 +71,7 @@ pipeline {
                     sshpass -e scp $SSH_OPTS \
                         src/sqoop/pgs_to_hadoop.sh \
                         src/sqoop/create_hive_tables.hql \
-                        "$REMOTE_USER@$REMOTE_HOST:$PROJECT_DIR/sqoop/"
+                        "$REMOTE_USER@$REMOTE_HOST:$PROJECT_DIR/src/raw_layer/"
                 '''
             }
         }
@@ -81,7 +81,7 @@ pipeline {
                 sh '''
                     export SSHPASS="$REMOTE_PASSWORD"
                     sshpass -e ssh $SSH_OPTS "$REMOTE_USER@$REMOTE_HOST" \
-                        "chmod +x '$PROJECT_DIR/sqoop/pgs_to_hadoop.sh'"
+                        "chmod +x '$PROJECT_DIR/src/raw_layer/pgs_to_hadoop.sh'"
                 '''
             }
         }
