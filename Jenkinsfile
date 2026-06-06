@@ -54,23 +54,30 @@ pipeline {
                 '''
             }
         }
-        stage('Test SSH Connection') {
-            steps {
-                sh '''
-                    set +x
-                    export SSHPASS="$REMOTE_PASSWORD"
-                    sshpass -e ssh $SSH_OPTS "$REMOTE_USER@$REMOTE_HOST" \
-                        "echo SSH_OK && hostname && whoami && pwd && exit 0"
-                '''
-            }
-        }
+        
+
+        // stage('Prepare Remote Directory') {
+        //     steps {
+        //         sh '''
+        //             export SSHPASS="$REMOTE_PASSWORD"
+        //             sshpass -e ssh $SSH_OPTS "$REMOTE_USER@$REMOTE_HOST" \
+        //                 "mkdir -p '$PROJECT_DIR/src/raw_layer/'"
+        //         '''
+        //     }
+        // }
 
         stage('Prepare Remote Directory') {
             steps {
+                echo '========================================='
+                echo 'Stage 2: Create Directories on Cloudera'
+                echo '========================================='
                 sh '''
-                    export SSHPASS="$REMOTE_PASSWORD"
-                    sshpass -e ssh $SSH_OPTS "$REMOTE_USER@$REMOTE_HOST" \
-                        "mkdir -p '$PROJECT_DIR/src/raw_layer/'"
+                    sshpass -p "${REMOTE_PASSWORD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+                        ${REMOTE_USER}@${REMOTE_HOST} \
+                        "mkdir -p ${PROJECT_DIR}/src/raw_layer 
+                        grep -v "ITC Big Data Lab" | grep -v "Commands:" | grep -v "HDFS home:" | grep -v "━" || true
+
+                    echo "Directories created"
                 '''
             }
         }
