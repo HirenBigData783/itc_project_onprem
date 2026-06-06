@@ -10,6 +10,7 @@ pipeline {
     environment {
         REMOTE_HOST = '13.41.167.97'
         REMOTE_USER = 'consultant'
+        REMOTE_PASSWORD = 'WelcomeItc@2026'
         PROJECT_DIR = '/home/consultant/hiren/TFL_Project'
         HDFS_DIR = '/tmp/hiren/tfl_proj/tfl_data_1'
         SSH_OPTS = '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
