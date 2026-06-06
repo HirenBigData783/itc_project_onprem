@@ -74,7 +74,7 @@ pipeline {
                 sh '''
                     sshpass -p "${REMOTE_PASSWORD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
                         ${REMOTE_USER}@${REMOTE_HOST} \
-                        "mkdir -p ${PROJECT_DIR}/sqoop"
+                        "mkdir -p ${PROJECT_DIR}//src/raw_layer/"
                         grep -v "ITC Big Data Lab" | grep -v "Commands:" | grep -v "HDFS home:" | grep -v "━" || true
 
                     echo "Directories created"
