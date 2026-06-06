@@ -11,7 +11,7 @@ pipeline {
         REMOTE_HOST = '13.41.167.97'
         REMOTE_USER = 'consultant'
         PROJECT_DIR = '/home/consultant/hiren/TFL_Project'
-        HDFS_DIR = '/tmp/hiren/tfl_proj/tfl_data'
+        HDFS_DIR = '/tmp/hiren/tfl_proj/tfl_data_1'
         SSH_OPTS = '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
     }
 
