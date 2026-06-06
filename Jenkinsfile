@@ -4,7 +4,7 @@ pipeline {
     parameters {
         password(name: 'REMOTE_PASSWORD', defaultValue: '', description: 'Remote SSH password for Cloudera')
         string(name: 'SQOOP_USER', defaultValue: 'admin', description: 'PostgreSQL username for Sqoop')
-        password(name: 'SQOOP_PASS', defaultValue: '', description: 'PostgreSQL password for Sqoop')
+        password(name: 'SQOOP_PASS', defaultValue: 'WelcomeItc@2026', description: 'PostgreSQL password for Sqoop')
     }
 
     environment {
