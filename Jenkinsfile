@@ -11,7 +11,7 @@ pipeline {
         REMOTE_HOST = '13.41.167.97'
         REMOTE_USER = 'consultant'
         REMOTE_PASSWORD = 'WelcomeItc@2026'
-        PROJECT_DIR = '/home/consultant/hiren/TFL_Project_1'
+        PROJECT_DIR = '/home/consultant/hiren/TFL_Project_1 '
         HDFS_DIR = '/tmp/hiren/tfl_proj/tfl_data_1'
         SSH_OPTS = '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
     }
@@ -60,7 +60,7 @@ pipeline {
                 sh '''
                     export SSHPASS="$REMOTE_PASSWORD"
                     sshpass -e ssh $SSH_OPTS "$REMOTE_USER@$REMOTE_HOST" \
-                        "mkdir -p '$PROJECT_DIR/sqoop'"
+                        "mkdir -p '$PROJECT_DIR/src/raw_layer/'"
                 '''
             }
         }
