@@ -54,6 +54,15 @@ pipeline {
                 '''
             }
         }
+        stage('Test SSH Connection') {
+            steps {
+                sh '''
+                    export SSHPASS="$REMOTE_PASSWORD"
+                    sshpass -e ssh $SSH_OPTS "$REMOTE_USER@$REMOTE_HOST" \
+                        "echo SSH_OK && hostname && whoami && pwd"
+                '''
+            }
+        }
 
         stage('Prepare Remote Directory') {
             steps {
