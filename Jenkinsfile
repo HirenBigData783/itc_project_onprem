@@ -57,9 +57,10 @@ pipeline {
         stage('Test SSH Connection') {
             steps {
                 sh '''
+                    set +x
                     export SSHPASS="$REMOTE_PASSWORD"
                     sshpass -e ssh $SSH_OPTS "$REMOTE_USER@$REMOTE_HOST" \
-                        "echo SSH_OK && hostname && whoami && pwd"
+                        "echo SSH_OK && hostname && whoami && pwd && exit 0"
                 '''
             }
         }
