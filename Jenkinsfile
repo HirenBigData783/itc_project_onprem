@@ -66,10 +66,22 @@ pipeline {
         //     }
         // }
 
-        stage('Test SSH Port') {
+        stage('Test Cloudera SSH Response') {
             steps {
                 sh '''
-                    nc -vz -w 10 "$REMOTE_HOST" 22
+                    set +x
+                    export SSHPASS="$REMOTE_PASSWORD"
+
+                    sshpass -e ssh -T -n \
+                        -o StrictHostKeyChecking=no \
+                        -o UserKnownHostsFile=/dev/null \
+                        -o ConnectTimeout=20 \
+                        -o ServerAliveInterval=10 \
+                        -o ServerAliveCountMax=3 \
+                        "$REMOTE_USER@$REMOTE_HOST" \
+                        "echo SSH_OK; hostname; whoami; pwd; exit 0"
+
+                    echo "Cloudera responded and Jenkins got control back"
                 '''
             }
         }
