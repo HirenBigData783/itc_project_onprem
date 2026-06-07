@@ -66,6 +66,13 @@ pipeline {
         //     }
         // }
 
+        stage('Test SSH Port') {
+            steps {
+                sh '''
+                    nc -vz -w 10 "$REMOTE_HOST" 22
+                '''
+            }
+        }
         stage('Prepare Remote Directory') {
             steps {
                 echo '========================================='
