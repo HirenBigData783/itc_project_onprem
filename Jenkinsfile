@@ -85,29 +85,30 @@ pipeline {
         //         '''
         //     }
         // }
-        stage('Prepare Remote Directory') {
-            steps {
-                echo '========================================='
-                echo 'Stage 2: Create Directories on Cloudera'
-                echo '========================================='
+    stage('Prepare Remote Directory') {
+        steps {
+            echo '========================================='
+            echo 'Stage 2: Create Directories on Cloudera'
+            echo '========================================='
 
-                sh '''
-                    set +x
-                    export SSHPASS="$REMOTE_PASSWORD"
+            sh '''
+                set +x
+                export SSHPASS="$REMOTE_PASSWORD"
 
-                    sshpass -e ssh -T -n \
-                        -o StrictHostKeyChecking=no \
-                        -o UserKnownHostsFile=/dev/null \
-                        -o ConnectTimeout=10 \
-                        -o ServerAliveInterval=5 \
-                        -o ServerAliveCountMax=1 \
-                        "$REMOTE_USER@$REMOTE_HOST" \
-                        "mkdir -p /home/consultant/hiren/TFL_Project_1/src/raw_layer; echo DIR_CREATED; exit 0" < /dev/null
+                timeout 20 sshpass -e ssh -T -n \
+                    -o StrictHostKeyChecking=no \
+                    -o UserKnownHostsFile=/dev/null \
+                    -o ConnectTimeout=10 \
+                    -o ServerAliveInterval=5 \
+                    -o ServerAliveCountMax=1 \
+                    "$REMOTE_USER@$REMOTE_HOST" \
+                    "bash --noprofile --norc -c 'mkdir -p /home/consultant/hiren/TFL_Project_1/src/raw_layer && echo DIR_CREATED'" \
+                    < /dev/null || true
 
-                    echo "Returned back to Jenkins"
-                '''
-            }
+                echo "Returned back to Jenkins after directory creation"
+            '''
         }
+    }
         stage('Copy Scripts to Cloudera') {
             steps {
                 sh '''
