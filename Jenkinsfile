@@ -111,35 +111,34 @@ pipeline {
     }
     
     stage('Copy Scripts to Cloudera') {
-        steps {
+    steps {
         sh '''
             set +x
             export SSHPASS="$REMOTE_PASSWORD"
 
-            echo "Checking local files before copy..."
-            ls -lh src/raw_layer/pgs_to_hadoop.sh
-            ls -lh src/raw_layer/create_hive_tables.hql
-
-            echo "Copying pgs_to_hadoop.sh..."
-            timeout 30 sshpass -e ssh -T \
+            timeout 60 sshpass -e ssh -T -n \
                 -o StrictHostKeyChecking=no \
                 -o UserKnownHostsFile=/dev/null \
                 -o ConnectTimeout=10 \
                 "$REMOTE_USER@$REMOTE_HOST" \
-                "cat > /home/consultant/hiren/TFL_Project_1/src/raw_layer/pgs_to_hadoop.sh" \
-                < src/raw_layer/pgs_to_hadoop.sh
+                "bash --noprofile --norc -c '
+                    mkdir -p /home/consultant/hiren
+                    cd /home/consultant/hiren
 
-            echo "Copying create_hive_tables.hql..."
-            timeout 30 sshpass -e ssh -T \
-                -o StrictHostKeyChecking=no \
-                -o UserKnownHostsFile=/dev/null \
-                -o ConnectTimeout=10 \
-                "$REMOTE_USER@$REMOTE_HOST" \
-                "cat > /home/consultant/hiren/TFL_Project_1/src/raw_layer/create_hive_tables.hql" \
-                < src/raw_layer/create_hive_tables.hql
+                    if [ -d TFL_Project_1/.git ]; then
+                        cd TFL_Project_1
+                        git pull origin master
+                    else
+                        git clone https://github.com/HirenBigData783/itc_project_onprem.git TFL_Project_1
+                    fi
 
-            echo "Scripts copied successfully"
-            '''
+                    ls -lh /home/consultant/hiren/TFL_Project_1/src/raw_layer/
+                    echo GIT_FILES_READY
+                    exit 0
+                '" || true
+
+            echo "Returned back to Jenkins after Git pull on Cloudera"
+        '''
         }
     }
 
