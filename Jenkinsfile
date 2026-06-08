@@ -109,27 +109,36 @@ pipeline {
             '''
         }
     }
-        stage('Copy Scripts to Cloudera') {
+    
+    stage('Copy Scripts to Cloudera') {
         steps {
-            sh '''
-                set +x
-                export SSHPASS="$REMOTE_PASSWORD"
+        sh '''
+            set +x
+            export SSHPASS="$REMOTE_PASSWORD"
 
-                echo "Checking local files before copy..."
-                ls -lh src/raw_layer/pgs_to_hadoop.sh
-                ls -lh src/raw_layer/create_hive_tables.hql
+            echo "Checking local files before copy..."
+            ls -lh src/raw_layer/pgs_to_hadoop.sh
+            ls -lh src/raw_layer/create_hive_tables.hql
 
-                echo "Copying scripts to Cloudera..."
+            echo "Copying pgs_to_hadoop.sh..."
+            timeout 30 sshpass -e ssh -T \
+                -o StrictHostKeyChecking=no \
+                -o UserKnownHostsFile=/dev/null \
+                -o ConnectTimeout=10 \
+                "$REMOTE_USER@$REMOTE_HOST" \
+                "cat > /home/consultant/hiren/TFL_Project_1/src/raw_layer/pgs_to_hadoop.sh" \
+                < src/raw_layer/pgs_to_hadoop.sh
 
-                timeout 60 sshpass -e scp \
-                    -o StrictHostKeyChecking=no \
-                    -o UserKnownHostsFile=/dev/null \
-                    -o ConnectTimeout=10 \
-                    src/raw_layer/pgs_to_hadoop.sh \
-                    src/raw_layer/create_hive_tables.hql \
-                    "$REMOTE_USER@$REMOTE_HOST:/home/consultant/hiren/TFL_Project_1/src/raw_layer/"
+            echo "Copying create_hive_tables.hql..."
+            timeout 30 sshpass -e ssh -T \
+                -o StrictHostKeyChecking=no \
+                -o UserKnownHostsFile=/dev/null \
+                -o ConnectTimeout=10 \
+                "$REMOTE_USER@$REMOTE_HOST" \
+                "cat > /home/consultant/hiren/TFL_Project_1/src/raw_layer/create_hive_tables.hql" \
+                < src/raw_layer/create_hive_tables.hql
 
-                echo "Scripts copied successfully"
+            echo "Scripts copied successfully"
             '''
         }
     }
