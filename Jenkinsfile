@@ -110,16 +110,29 @@ pipeline {
         }
     }
         stage('Copy Scripts to Cloudera') {
-            steps {
-                sh '''
-                    export SSHPASS="$REMOTE_PASSWORD"
-                    sshpass -e scp $SSH_OPTS \
-                        src/raw_layer/pgs_to_hadoop.sh \
-                        src/raw_layer/create_hive_tables.hql \
-                        "$REMOTE_USER@$REMOTE_HOST:$PROJECT_DIR/src/raw_layer/"
-                '''
-            }
+        steps {
+            sh '''
+                set +x
+                export SSHPASS="$REMOTE_PASSWORD"
+
+                echo "Checking local files before copy..."
+                ls -lh src/raw_layer/pgs_to_hadoop.sh
+                ls -lh src/raw_layer/create_hive_tables.hql
+
+                echo "Copying scripts to Cloudera..."
+
+                timeout 60 sshpass -e scp \
+                    -o StrictHostKeyChecking=no \
+                    -o UserKnownHostsFile=/dev/null \
+                    -o ConnectTimeout=10 \
+                    src/raw_layer/pgs_to_hadoop.sh \
+                    src/raw_layer/create_hive_tables.hql \
+                    "$REMOTE_USER@$REMOTE_HOST:/home/consultant/hiren/TFL_Project_1/src/raw_layer/"
+
+                echo "Scripts copied successfully"
+            '''
         }
+    }
 
         stage('Set Permissions') {
             steps {
