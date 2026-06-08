@@ -90,13 +90,21 @@ pipeline {
                 echo '========================================='
                 echo 'Stage 2: Create Directories on Cloudera'
                 echo '========================================='
-                sh '''
-                    sshpass -p "${REMOTE_PASSWORD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-                        ${REMOTE_USER}@${REMOTE_HOST} \
-                        "mkdir -p ${PROJECT_DIR}/src/raw_layer"
-                        grep -v "ITC Big Data Lab" | grep -v "Commands:" | grep -v "HDFS home:" | grep -v "━" || true
 
-                    echo "Directories created"
+                sh '''
+                    set +x
+                    export SSHPASS="$REMOTE_PASSWORD"
+
+                    timeout 30 sshpass -e ssh -T -n \
+                        -o StrictHostKeyChecking=no \
+                        -o UserKnownHostsFile=/dev/null \
+                        -o ConnectTimeout=10 \
+                        -o ServerAliveInterval=10 \
+                        -o ServerAliveCountMax=2 \
+                        "$REMOTE_USER@$REMOTE_HOST" \
+                        "mkdir -p /home/consultant/hiren/TFL_Project_1/src/raw_layer && echo DIR_CREATED && exit 0"
+
+                    echo "Returned back to Jenkins"
                 '''
             }
         }
