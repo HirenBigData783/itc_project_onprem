@@ -143,16 +143,24 @@ pipeline {
         }
     }
 
-        stage('Set Permissions') {
-            steps {
-                sh '''
-                    export SSHPASS="$REMOTE_PASSWORD"
-                    sshpass -e ssh $SSH_OPTS "$REMOTE_USER@$REMOTE_HOST" \
-                        "chmod +x '$PROJECT_DIR/src/raw_layer/pgs_to_hadoop.sh'"
-                '''
-            }
-        }
+    stage('Set Permissions') {
+        steps {
+            sh '''
+                set +x
+                export SSHPASS="$REMOTE_PASSWORD"
 
+                timeout 30 sshpass -e ssh -T -n \
+                    -o StrictHostKeyChecking=no \
+                    -o UserKnownHostsFile=/dev/null \
+                    -o ConnectTimeout=10 \
+                    "$REMOTE_USER@$REMOTE_HOST" \
+                    "chmod +x /home/consultant/hiren/TFL_Project_1/src/raw_layer/pgs_to_hadoop.sh && echo PERMISSION_SET && exit 0" \
+                    < /dev/null
+
+                echo "Returned back to Jenkins after permission setup"
+            '''
+        }
+    }
         stage('Prepare Remote Staging') {
             steps {
                 sh '''
