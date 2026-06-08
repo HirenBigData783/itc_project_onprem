@@ -183,13 +183,18 @@ pipeline {
         stage('Sqoop Import and Hive Tables') {
             steps {
                 sh '''
+                    set +x
                     export SSHPASS="$REMOTE_PASSWORD"
-                    sshpass -e ssh $SSH_OPTS "$REMOTE_USER@$REMOTE_HOST" \
-                        "SQOOP_USER='$SQOOP_USER' SQOOP_PASS='$SQOOP_PASS' bash '$PROJECT_DIR/raw_layer/pgs_to_hadoop.sh'"
+
+                    sshpass -e ssh -T -n \
+                        -o StrictHostKeyChecking=no \
+                        -o UserKnownHostsFile=/dev/null \
+                        -o ConnectTimeout=10 \
+                        "$REMOTE_USER@$REMOTE_HOST" \
+                        "SQOOP_USER='$SQOOP_USER' SQOOP_PASS='$SQOOP_PASS' bash '$PROJECT_DIR/src/raw_layer/pgs_to_hadoop.sh'"
                 '''
             }
         }
-
         stage('Verify HDFS Data') {
             steps {
                 sh '''
