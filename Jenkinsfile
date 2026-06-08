@@ -95,20 +95,19 @@ pipeline {
                     set +x
                     export SSHPASS="$REMOTE_PASSWORD"
 
-                    timeout 30 sshpass -e ssh -T -n \
+                    sshpass -e ssh -T -n \
                         -o StrictHostKeyChecking=no \
                         -o UserKnownHostsFile=/dev/null \
                         -o ConnectTimeout=10 \
-                        -o ServerAliveInterval=10 \
-                        -o ServerAliveCountMax=2 \
+                        -o ServerAliveInterval=5 \
+                        -o ServerAliveCountMax=1 \
                         "$REMOTE_USER@$REMOTE_HOST" \
-                        "mkdir -p /home/consultant/hiren/TFL_Project_1/src/raw_layer && echo DIR_CREATED && exit 0"
+                        "mkdir -p /home/consultant/hiren/TFL_Project_1/src/raw_layer; echo DIR_CREATED; exit 0" < /dev/null
 
                     echo "Returned back to Jenkins"
                 '''
             }
         }
-
         stage('Copy Scripts to Cloudera') {
             steps {
                 sh '''
